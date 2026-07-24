@@ -124,16 +124,19 @@ public class BookingService {
             throw new IllegalArgumentException("Ticket ID cannot be blank.");
         }
 
+        // Look up the ticket
         Ticket ticket = dataContext.getTicketById(ticketId);
         if (ticket == null) {
             throw new IllegalArgumentException("No ticket found with ID: " + ticketId);
         }
 
+        // Free the seat on the flight
         Flight flight = ticket.getFlight();
         if (flight != null) {
             flight.cancelSeat();
         }
 
+        // Remove from storage and persist
         dataContext.removeTicket(ticketId);
         dataContext.saveToDisk();
 
@@ -145,20 +148,42 @@ public class BookingService {
 
     // ── Query & Search Methods (used by UI layer) ──────────────────────────────
 
+    /**
+     * Returns all flights currently in the system.
+     * @return Unmodifiable list of all flights
+     */
     public List<Flight> getAllFlights() {
         return dataContext.getAllFlights();
     }
 
+    /**
+     * Returns all tickets currently in the system as a list.
+     * @return List of all issued tickets
+     */
     public List<Ticket> getAllTickets() {
         return dataContext.getAllTicketsList();
     }
 
+    /**
+     * Looks up a ticket by its unique ticket ID.
+     * @param ticketId The ticket ID to find
+     * @return The matching Ticket, or null if not found
+     */
     public Ticket findTicketById(String ticketId) {
         return dataContext.getTicketById(ticketId);
     }
 
+    /**
+     * Searches flights matching the given keyword against flight number, origin, destination, or airline.
+     * Case-insensitive search.
+     *
+     * @param keyword Search term
+     * @return List of matching Flight objects
+     */
     public List<Flight> searchFlights(String keyword) {
-        if (keyword == null || keyword.isBlank()) return dataContext.getAllFlights();
+        if (keyword == null || keyword.isBlank()) {
+            return dataContext.getAllFlights();
+        }
         String lower = keyword.toLowerCase().trim();
         return dataContext.getAllFlights().stream()
                 .filter(f ->
@@ -170,6 +195,12 @@ public class BookingService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Returns all tickets belonging to a specific passenger by their full name (case-insensitive).
+     *
+     * @param passengerName The name to search for
+     * @return List of matching tickets
+     */
     public List<Ticket> getTicketsByPassengerName(String passengerName) {
         if (passengerName == null || passengerName.isBlank()) return Collections.emptyList();
         String lower = passengerName.toLowerCase().trim();
@@ -178,6 +209,12 @@ public class BookingService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Returns all tickets for a given flight number.
+     *
+     * @param flightNumber The flight number to filter by
+     * @return List of tickets on that flight
+     */
     public List<Ticket> getTicketsByFlight(String flightNumber) {
         if (flightNumber == null || flightNumber.isBlank()) return Collections.emptyList();
         return dataContext.getAllTicketsList().stream()
@@ -187,18 +224,30 @@ public class BookingService {
 
     // ── Statistics ─────────────────────────────────────────────────────────────
 
+    /**
+     * Calculates total revenue from all issued tickets.
+     * @return Sum of calculateTotalPrice() across all tickets
+     */
     public double getTotalRevenue() {
         return dataContext.getAllTicketsList().stream()
                 .mapToDouble(Ticket::calculateTotalPrice)
                 .sum();
     }
 
+    /**
+     * Counts total booked seats across all flights.
+     * @return Total number of booked seats
+     */
     public int getTotalBookedSeats() {
         return dataContext.getAllFlights().stream()
                 .mapToInt(Flight::getBookedSeats)
                 .sum();
     }
 
+    /**
+     * Counts total available seats across all flights.
+     * @return Total number of available seats
+     */
     public int getTotalAvailableSeats() {
         return dataContext.getAllFlights().stream()
                 .mapToInt(Flight::getAvailableSeats)
@@ -207,22 +256,36 @@ public class BookingService {
 
     // ── Helper: ID & Seat Generation ──────────────────────────────────────────
 
+    /**
+     * Generates a unique ticket ID using a timestamp and random suffix.
+     * Format: TKT-<timestamp>-<random4digits>
+     */
     private String generateTicketId() {
         String timestamp = String.valueOf(System.currentTimeMillis()).substring(7);
         String random    = String.format("%04d", new Random().nextInt(10000));
         return TICKET_PREFIX + "-" + timestamp + "-" + random;
     }
 
+    /**
+     * Generates an incremental seat number per flight.
+     * Business class gets rows 1-20, Economy gets rows 21 onward.
+     * Format: <row><column>  e.g. "5A", "23C"
+     */
     private String generateSeatNumber(String flightNumber, String tier) {
         String key = flightNumber + "-" + tier;
         int index = seatCounterMap.getOrDefault(key, 0) + 1;
         seatCounterMap.put(key, index);
+
         int startRow = tier.equalsIgnoreCase(TIER_BUSINESS) ? 1 : 21;
         int row      = startRow + (index - 1) / 6;
         char col     = (char) ('A' + (index - 1) % 6);
         return row + "" + col;
     }
 
+    /**
+     * Exposes the underlying DataContext for direct access when needed.
+     * @return The DataContext instance managed by this service
+     */
     public DataContext getDataContext() {
         return dataContext;
     }
