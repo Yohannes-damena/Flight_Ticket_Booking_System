@@ -17,7 +17,6 @@ public class TicketReceiptDialog extends JDialog {
         setSize(480, 540);
         setResizable(false);
         setLocationRelativeTo(owner);
-        setUndecorated(true);
         setContentPane(buildContent(ticket));
     }
 

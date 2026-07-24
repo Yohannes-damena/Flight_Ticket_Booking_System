@@ -46,7 +46,6 @@ public class BookingFormDialog extends JDialog {
         setSize(DIALOG_W, DIALOG_H);
         setResizable(false);
         setLocationRelativeTo(owner);
-        setUndecorated(true);
 
         setContentPane(buildRoot());
     }
@@ -57,43 +56,12 @@ public class BookingFormDialog extends JDialog {
         root.setBackground(FlightListPanel.BG_CARD);
         root.setBorder(BorderFactory.createLineBorder(FlightListPanel.BORDER_COLOR, 1));
 
-        root.add(buildTitleBar(), BorderLayout.NORTH);
         root.add(buildForm(),     BorderLayout.CENTER);
         root.add(buildFooter(),   BorderLayout.SOUTH);
         return root;
     }
 
-    // ── Title bar ──────────────────────────────────────────────────────────────
-    private JPanel buildTitleBar() {
-        JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(new Color(0x12151F));
-        bar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, FlightListPanel.BORDER_COLOR),
-                BorderFactory.createEmptyBorder(14, 22, 14, 14)
-        ));
 
-        JLabel title = new JLabel("✈   Book a Flight Ticket");
-        title.setForeground(FlightListPanel.TEXT_PRIMARY);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 17));
-        bar.add(title, BorderLayout.WEST);
-
-        JButton closeBtn = new JButton("✕");
-        closeBtn.setForeground(FlightListPanel.TEXT_MUTED);
-        closeBtn.setBackground(new Color(0x12151F));
-        closeBtn.setOpaque(true);
-        closeBtn.setContentAreaFilled(true);
-        closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        closeBtn.setBorder(BorderFactory.createEmptyBorder(4, 12, 4, 12));
-        closeBtn.setFocusPainted(false);
-        closeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        closeBtn.addActionListener(e -> dispose());
-        closeBtn.addMouseListener(new MouseAdapter() {
-            @Override public void mouseEntered(MouseEvent e) { closeBtn.setForeground(FlightListPanel.RED_FULL); }
-            @Override public void mouseExited(MouseEvent e)  { closeBtn.setForeground(FlightListPanel.TEXT_MUTED); }
-        });
-        bar.add(closeBtn, BorderLayout.EAST);
-        return bar;
-    }
 
     // ── Form body ──────────────────────────────────────────────────────────────
     private JPanel buildForm() {
@@ -221,7 +189,7 @@ public class BookingFormDialog extends JDialog {
         footer.setBackground(new Color(0x12151F));
         footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, FlightListPanel.BORDER_COLOR));
 
-        JButton cancelBtn = makeButton("   Cancel   ", FlightListPanel.BG_CARD, FlightListPanel.TEXT_MUTED);
+        JButton cancelBtn = makeButton("   Cancel   ", FlightListPanel.BG_CARD, FlightListPanel.TEXT_PRIMARY);
         cancelBtn.addActionListener(e -> dispose());
 
         JButton bookBtn = makeButton("  Confirm Booking  ", FlightListPanel.ACCENT_BLUE, Color.WHITE);
