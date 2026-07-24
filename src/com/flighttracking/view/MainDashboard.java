@@ -60,16 +60,19 @@ public class MainDashboard extends JFrame {
 
     // ── Global Look & Feel ─────────────────────────────────────────────────────
     private void applyGlobalTheme() {
+        // Use cross-platform Metal LAF — Windows System LAF ignores custom button colours
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
         } catch (Exception ignored) {}
 
-        // Override specific LAF colours to match our dark theme
+        // Override colours globally
         UIManager.put("OptionPane.background",            FlightListPanel.BG_CARD);
         UIManager.put("Panel.background",                 FlightListPanel.BG_CARD);
         UIManager.put("OptionPane.messageForeground",     FlightListPanel.TEXT_PRIMARY);
         UIManager.put("Button.background",                FlightListPanel.BG_CARD);
         UIManager.put("Button.foreground",                FlightListPanel.TEXT_PRIMARY);
+        UIManager.put("Button.select",                    FlightListPanel.BG_CARD.brighter());
+        UIManager.put("Button.focus",                     new Color(0, 0, 0, 0));
         UIManager.put("ComboBox.background",              FlightListPanel.BG_DARK);
         UIManager.put("ComboBox.foreground",              FlightListPanel.TEXT_PRIMARY);
         UIManager.put("ComboBox.selectionBackground",     FlightListPanel.ACCENT_BLUE);
@@ -78,6 +81,8 @@ public class MainDashboard extends JFrame {
         UIManager.put("TabbedPane.foreground",            FlightListPanel.TEXT_PRIMARY);
         UIManager.put("TabbedPane.selected",              FlightListPanel.BG_CARD);
         UIManager.put("TabbedPane.contentAreaColor",      FlightListPanel.BG_DARK);
+        UIManager.put("ScrollBar.background",             FlightListPanel.BG_DARK);
+        UIManager.put("ScrollBar.thumb",                  new Color(0x3A3D52));
     }
 
     // ── Header Band ────────────────────────────────────────────────────────────
@@ -201,13 +206,24 @@ public class MainDashboard extends JFrame {
         JButton btn = new JButton(text);
         btn.setBackground(bg);
         btn.setForeground(fg);
+        btn.setOpaque(true);                    // must be true for custom bg to show
+        btn.setContentAreaFilled(true);
+        btn.setBorderPainted(true);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btn.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(FlightListPanel.BORDER_COLOR),
-                BorderFactory.createEmptyBorder(7, 14, 7, 14)
+                BorderFactory.createEmptyBorder(7, 16, 7, 16)
         ));
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        // Hover effect
+        Color hoverBg = bg.equals(FlightListPanel.ACCENT_BLUE)
+                ? FlightListPanel.ACCENT_BLUE.brighter()
+                : FlightListPanel.BG_HEADER;
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) { btn.setBackground(hoverBg); }
+            @Override public void mouseExited(java.awt.event.MouseEvent e)  { btn.setBackground(bg); }
+        });
         return btn;
     }
 

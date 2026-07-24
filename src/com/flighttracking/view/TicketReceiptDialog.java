@@ -144,6 +144,8 @@ public class TicketReceiptDialog extends JDialog {
         JButton closeBtn = new JButton("  Close  ");
         closeBtn.setBackground(FlightListPanel.ACCENT_BLUE);
         closeBtn.setForeground(Color.WHITE);
+        closeBtn.setOpaque(true);
+        closeBtn.setContentAreaFilled(true);
         closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 13));
         closeBtn.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(FlightListPanel.ACCENT_BLUE.darker()),

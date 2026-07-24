@@ -3,7 +3,6 @@ package com.flighttracking.view;
 import com.flighttracking.exception.FlightOverbookedException;
 import com.flighttracking.model.*;
 import com.flighttracking.service.BookingService;
-import com.flighttracking.view.FlightListPanel.*;
 
 import javax.swing.*;
 import javax.swing.border.*;
@@ -13,100 +12,110 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * BookingFormDialog — a modal JDialog that captures passenger information,
- * flight selection, ticket tier, and add-on options. Computes the live price
- * and submits via BookingService.bookFlight().
+ * BookingFormDialog — a fully resized and properly laid-out modal JDialog.
+ * Uses GridBagLayout for the form body to ensure all fields align correctly.
  */
 public class BookingFormDialog extends JDialog {
 
+    private static final int DIALOG_W = 640;
+    private static final int DIALOG_H = 660;
+
     private final BookingService service;
     private final List<Flight>   flights;
+    private final Flight         preSelectedFlight;
 
     // Result
     private Ticket bookedTicket = null;
 
-    // ── Form Fields ────────────────────────────────────────────────────────────
+    // ── Form controls ──────────────────────────────────────────────────────────
     private JComboBox<String> flightCombo;
     private JTextField        fullNameField, emailField, passportField, phoneField;
     private JComboBox<String> tierCombo;
     private JSpinner          baggageSpinner;
     private JCheckBox         loungeCheck;
     private JLabel            priceLabel;
+    private JPanel            baggageRow, loungeRow;
 
-    // Pre-selected flight (from table selection)
-    private final Flight preSelectedFlight;
-
+    // ── Constructor ────────────────────────────────────────────────────────────
     public BookingFormDialog(Frame owner, BookingService service, Flight preSelectedFlight) {
         super(owner, "Book a Flight Ticket", true);
-        this.service          = service;
-        this.flights          = (List<Flight>) service.getAllFlights();
+        this.service           = service;
+        this.flights           = (List<Flight>) service.getAllFlights();
         this.preSelectedFlight = preSelectedFlight;
 
-        setSize(560, 680);
+        setSize(DIALOG_W, DIALOG_H);
         setResizable(false);
         setLocationRelativeTo(owner);
         setUndecorated(true);
 
-        JPanel root = buildRootPanel();
-        setContentPane(root);
+        setContentPane(buildRoot());
     }
 
-    // ── Root Panel ─────────────────────────────────────────────────────────────
-    private JPanel buildRootPanel() {
+    // ── Root ───────────────────────────────────────────────────────────────────
+    private JPanel buildRoot() {
         JPanel root = new JPanel(new BorderLayout());
         root.setBackground(FlightListPanel.BG_CARD);
         root.setBorder(BorderFactory.createLineBorder(FlightListPanel.BORDER_COLOR, 1));
 
-        root.add(buildTitleBar(),   BorderLayout.NORTH);
-        root.add(buildFormBody(),   BorderLayout.CENTER);
-        root.add(buildFooter(),     BorderLayout.SOUTH);
+        root.add(buildTitleBar(), BorderLayout.NORTH);
+        root.add(buildForm(),     BorderLayout.CENTER);
+        root.add(buildFooter(),   BorderLayout.SOUTH);
         return root;
     }
 
-    // ── Title Bar ──────────────────────────────────────────────────────────────
+    // ── Title bar ──────────────────────────────────────────────────────────────
     private JPanel buildTitleBar() {
         JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(FlightListPanel.BG_DARK);
+        bar.setBackground(new Color(0x12151F));
         bar.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, FlightListPanel.BORDER_COLOR),
-                BorderFactory.createEmptyBorder(14, 20, 14, 20)
+                BorderFactory.createEmptyBorder(14, 22, 14, 14)
         ));
 
-        JLabel title = new JLabel("✈  Book a Flight Ticket");
+        JLabel title = new JLabel("✈   Book a Flight Ticket");
         title.setForeground(FlightListPanel.TEXT_PRIMARY);
-        title.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        bar.add(title, BorderLayout.WEST);
 
         JButton closeBtn = new JButton("✕");
-        closeBtn.setBackground(FlightListPanel.BG_DARK);
         closeBtn.setForeground(FlightListPanel.TEXT_MUTED);
-        closeBtn.setBorder(BorderFactory.createEmptyBorder(2, 8, 2, 8));
+        closeBtn.setBackground(new Color(0x12151F));
+        closeBtn.setOpaque(true);
+        closeBtn.setContentAreaFilled(true);
+        closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        closeBtn.setBorder(BorderFactory.createEmptyBorder(4, 12, 4, 12));
         closeBtn.setFocusPainted(false);
         closeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         closeBtn.addActionListener(e -> dispose());
-        closeBtn.addMouseListener(hoverEffect(closeBtn, FlightListPanel.RED_FULL, FlightListPanel.BG_DARK));
-
-        bar.add(title,    BorderLayout.WEST);
+        closeBtn.addMouseListener(new MouseAdapter() {
+            @Override public void mouseEntered(MouseEvent e) { closeBtn.setForeground(FlightListPanel.RED_FULL); }
+            @Override public void mouseExited(MouseEvent e)  { closeBtn.setForeground(FlightListPanel.TEXT_MUTED); }
+        });
         bar.add(closeBtn, BorderLayout.EAST);
         return bar;
     }
 
-    // ── Form Body ──────────────────────────────────────────────────────────────
-    private JScrollPane buildFormBody() {
-        JPanel form = new JPanel();
-        form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
-        form.setBackground(FlightListPanel.BG_CARD);
-        form.setBorder(BorderFactory.createEmptyBorder(20, 28, 10, 28));
+    // ── Form body ──────────────────────────────────────────────────────────────
+    private JPanel buildForm() {
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(FlightListPanel.BG_CARD);
+        wrapper.setBorder(BorderFactory.createEmptyBorder(22, 30, 16, 30));
 
-        // Section: Flight Selection
-        form.add(sectionLabel("Flight Selection"));
-        form.add(Box.createVerticalStrut(8));
+        JPanel grid = new JPanel(new GridBagLayout());
+        grid.setBackground(FlightListPanel.BG_CARD);
+        GridBagConstraints gbc = baseGbc();
+
+        // ── SECTION: Flight Selection ──────────────────────────────────────────
+        addSectionHeader(grid, gbc, "FLIGHT SELECTION");
 
         String[] flightOptions = flights.stream()
-                .map(f -> f.getFlightNumber() + " — " + f.getOrigin() + " → " + f.getDestination()
-                        + "  (" + f.getAvailableSeats() + " seats)  $" + (int) f.getBasePrice())
+                .map(f -> f.getFlightNumber() + "  —  " + f.getOrigin()
+                        + " → " + f.getDestination()
+                        + "   (" + f.getAvailableSeats() + " seats)"
+                        + "   $" + (int) f.getBasePrice())
                 .toArray(String[]::new);
-        flightCombo = styledCombo(flightOptions);
+
+        flightCombo = makeCombo(flightOptions);
         if (preSelectedFlight != null) {
             for (int i = 0; i < flights.size(); i++) {
                 if (flights.get(i).getFlightNumber().equals(preSelectedFlight.getFlightNumber())) {
@@ -115,117 +124,107 @@ public class BookingFormDialog extends JDialog {
                 }
             }
         }
-        form.add(labeledRow("Flight", flightCombo));
-        form.add(Box.createVerticalStrut(16));
+        addRow(grid, gbc, "Flight", flightCombo);
 
-        // Section: Passenger Information
-        form.add(sectionLabel("Passenger Information"));
-        form.add(Box.createVerticalStrut(8));
-        fullNameField = styledField("e.g. Abebe Bikila");
-        emailField    = styledField("e.g. abebe@email.com");
-        passportField = styledField("e.g. EP112233");
-        phoneField    = styledField("e.g. +251911000000");
-        form.add(labeledRow("Full Name",       fullNameField));
-        form.add(Box.createVerticalStrut(8));
-        form.add(labeledRow("Email",           emailField));
-        form.add(Box.createVerticalStrut(8));
-        form.add(labeledRow("Passport No.",    passportField));
-        form.add(Box.createVerticalStrut(8));
-        form.add(labeledRow("Phone Number",    phoneField));
-        form.add(Box.createVerticalStrut(16));
+        // ── SECTION: Passenger ─────────────────────────────────────────────────
+        addGap(grid, gbc, 10);
+        addSectionHeader(grid, gbc, "PASSENGER INFORMATION");
 
-        // Section: Ticket Options
-        form.add(sectionLabel("Ticket Options"));
-        form.add(Box.createVerticalStrut(8));
+        fullNameField = makeField("e.g. Abebe Bikila");
+        emailField    = makeField("e.g. abebe@email.com");
+        passportField = makeField("e.g. EP112233");
+        phoneField    = makeField("e.g. +251 911 000 000");
 
-        tierCombo = styledCombo(new String[]{"Economy", "Business"});
-        tierCombo.addActionListener(e -> updateOptionsVisibility(form));
-        form.add(labeledRow("Class Tier", tierCombo));
-        form.add(Box.createVerticalStrut(8));
+        addRow(grid, gbc, "Full Name",    fullNameField);
+        addRow(grid, gbc, "Email",        emailField);
+        addRow(grid, gbc, "Passport No.", passportField);
+        addRow(grid, gbc, "Phone",        phoneField);
 
-        // Extra baggage (Economy)
+        // ── SECTION: Ticket Options ────────────────────────────────────────────
+        addGap(grid, gbc, 10);
+        addSectionHeader(grid, gbc, "TICKET OPTIONS");
+
+        tierCombo = makeCombo(new String[]{"Economy", "Business"});
+        addRow(grid, gbc, "Class Tier", tierCombo);
+
+        // Extra baggage row (Economy)
         baggageSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 10, 1));
         styleSpinner(baggageSpinner);
-        form.add(labeledRow("Extra Bags ($35 each)", baggageSpinner));
-        form.add(Box.createVerticalStrut(8));
+        baggageRow = makeRowPanel("Extra Bags (+$35 each)", baggageSpinner);
+        gbc.gridy++;
+        gbc.gridx = 0; gbc.gridwidth = 2;
+        grid.add(baggageRow, gbc);
 
         // Lounge access (Business)
-        loungeCheck = new JCheckBox("Include Airport Lounge Access (+$75)");
+        loungeCheck = new JCheckBox("  Include Airport Lounge Access  (+$75)");
         loungeCheck.setBackground(FlightListPanel.BG_CARD);
         loungeCheck.setForeground(FlightListPanel.TEXT_PRIMARY);
         loungeCheck.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         loungeCheck.setSelected(true);
-        loungeCheck.setVisible(false);
-        form.add(loungeCheck);
-        form.add(Box.createVerticalStrut(16));
+        loungeRow = makeRowPanel("Lounge Access", loungeCheck);
+        loungeRow.setVisible(false);
+        gbc.gridy++;
+        gbc.gridx = 0; gbc.gridwidth = 2;
+        grid.add(loungeRow, gbc);
 
-        // Live price preview
-        JPanel priceBanner = new JPanel(new BorderLayout());
-        priceBanner.setBackground(new Color(0x1A2540));
-        priceBanner.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(FlightListPanel.ACCENT_BLUE.darker(), 1),
-                BorderFactory.createEmptyBorder(10, 16, 10, 16)
-        ));
-        JLabel priceTitle = new JLabel("Estimated Total");
-        priceTitle.setForeground(FlightListPanel.TEXT_MUTED);
-        priceTitle.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        priceLabel = new JLabel("$0.00");
-        priceLabel.setForeground(FlightListPanel.ACCENT_BLUE);
-        priceLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        priceBanner.add(priceTitle, BorderLayout.WEST);
-        priceBanner.add(priceLabel, BorderLayout.EAST);
-        form.add(priceBanner);
+        // ── Price Banner ───────────────────────────────────────────────────────
+        addGap(grid, gbc, 12);
+        gbc.gridy++;
+        gbc.gridx = 0; gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        grid.add(buildPriceBanner(), gbc);
 
-        // Attach live price listeners
+        // Listeners
         flightCombo.addActionListener(e -> updateLivePrice());
-        tierCombo.addActionListener(e -> { updateOptionsVisibility(form); updateLivePrice(); });
+        tierCombo.addActionListener(e -> { swapTierOptions(); updateLivePrice(); });
         baggageSpinner.addChangeListener(e -> updateLivePrice());
         loungeCheck.addActionListener(e -> updateLivePrice());
 
         updateLivePrice();
 
-        JScrollPane scroll = new JScrollPane(form);
-        scroll.setBackground(FlightListPanel.BG_CARD);
-        scroll.getViewport().setBackground(FlightListPanel.BG_CARD);
-        scroll.setBorder(null);
-        scroll.getVerticalScrollBar().setUI(new FlightListPanel.DarkScrollBarUI());
-        return scroll;
+        wrapper.add(grid, BorderLayout.NORTH);
+        return wrapper;
     }
 
-    private void updateOptionsVisibility(JPanel form) {
-        boolean isBusiness = "Business".equals(tierCombo.getSelectedItem());
-        baggageSpinner.getParent().setVisible(!isBusiness);
-        loungeCheck.setVisible(isBusiness);
-        form.revalidate();
-        form.repaint();
-    }
+    private JPanel buildPriceBanner() {
+        JPanel banner = new JPanel(new BorderLayout(0, 0));
+        banner.setBackground(new Color(0x141C35));
+        banner.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(FlightListPanel.ACCENT_BLUE.darker(), 1),
+                BorderFactory.createEmptyBorder(12, 18, 12, 18)
+        ));
 
-    private void updateLivePrice() {
-        int idx = flightCombo.getSelectedIndex();
-        if (idx < 0 || idx >= flights.size()) { priceLabel.setText("$0.00"); return; }
-        Flight f    = flights.get(idx);
-        boolean eco = "Economy".equals(tierCombo.getSelectedItem());
-        double price;
-        if (eco) {
-            int bags = (int) baggageSpinner.getValue();
-            price = f.getBasePrice() + bags * 35.0;
-        } else {
-            boolean lounge = loungeCheck.isSelected();
-            price = f.getBasePrice() * 1.5 + (lounge ? 75.0 : 0.0);
-        }
-        priceLabel.setText(String.format("$%.2f", price));
+        JPanel left = new JPanel(new GridLayout(2, 1));
+        left.setOpaque(false);
+        JLabel caption = new JLabel("Estimated Total");
+        caption.setForeground(FlightListPanel.TEXT_MUTED);
+        caption.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        JLabel note = new JLabel("Includes base fare + add-ons");
+        note.setForeground(new Color(0x4A5068));
+        note.setFont(new Font("Segoe UI", Font.PLAIN, 10));
+        left.add(caption);
+        left.add(note);
+
+        priceLabel = new JLabel("$0.00");
+        priceLabel.setForeground(FlightListPanel.ACCENT_BLUE);
+        priceLabel.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        priceLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+
+        banner.add(left,       BorderLayout.WEST);
+        banner.add(priceLabel, BorderLayout.EAST);
+        return banner;
     }
 
     // ── Footer ─────────────────────────────────────────────────────────────────
     private JPanel buildFooter() {
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 12));
-        footer.setBackground(FlightListPanel.BG_DARK);
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 14, 12));
+        footer.setBackground(new Color(0x12151F));
         footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, FlightListPanel.BORDER_COLOR));
 
-        JButton cancelBtn = styledButton("Cancel", FlightListPanel.BG_CARD, FlightListPanel.TEXT_MUTED);
+        JButton cancelBtn = makeButton("   Cancel   ", FlightListPanel.BG_CARD, FlightListPanel.TEXT_MUTED);
         cancelBtn.addActionListener(e -> dispose());
 
-        JButton bookBtn = styledButton("  Confirm Booking  ", FlightListPanel.ACCENT_BLUE, Color.WHITE);
+        JButton bookBtn = makeButton("  Confirm Booking  ", FlightListPanel.ACCENT_BLUE, Color.WHITE);
         bookBtn.addActionListener(e -> handleBooking());
 
         footer.add(cancelBtn);
@@ -233,20 +232,41 @@ public class BookingFormDialog extends JDialog {
         return footer;
     }
 
-    // ── Booking Handler ────────────────────────────────────────────────────────
+    // ── Tier toggle ────────────────────────────────────────────────────────────
+    private void swapTierOptions() {
+        boolean isBusiness = "Business".equals(tierCombo.getSelectedItem());
+        baggageRow.setVisible(!isBusiness);
+        loungeRow.setVisible(isBusiness);
+    }
+
+    // ── Live price ─────────────────────────────────────────────────────────────
+    private void updateLivePrice() {
+        int idx = flightCombo.getSelectedIndex();
+        if (idx < 0 || idx >= flights.size()) { priceLabel.setText("$0.00"); return; }
+        Flight f   = flights.get(idx);
+        boolean eco = "Economy".equals(tierCombo.getSelectedItem());
+        double price;
+        if (eco) {
+            price = f.getBasePrice() + (int) baggageSpinner.getValue() * 35.0;
+        } else {
+            price = f.getBasePrice() * 1.5 + (loungeCheck.isSelected() ? 75.0 : 0.0);
+        }
+        priceLabel.setText(String.format("$%.2f", price));
+    }
+
+    // ── Booking handler ────────────────────────────────────────────────────────
     private void handleBooking() {
-        // Validate fields
-        if (fullNameField.getText().isBlank()) { shake(fullNameField); showError("Full name is required."); return; }
-        if (emailField.getText().isBlank())    { shake(emailField);    showError("Email is required.");     return; }
-        if (passportField.getText().isBlank()) { shake(passportField); showError("Passport number is required."); return; }
-        if (phoneField.getText().isBlank())    { shake(phoneField);    showError("Phone number is required."); return; }
+        if (fullNameField.getText().isBlank()) { shake(fullNameField); err("Full name is required.");     return; }
+        if (emailField.getText().isBlank())    { shake(emailField);    err("Email is required.");         return; }
+        if (passportField.getText().isBlank()) { shake(passportField); err("Passport number is required."); return; }
+        if (phoneField.getText().isBlank())    { shake(phoneField);    err("Phone number is required.");  return; }
 
         int idx = flightCombo.getSelectedIndex();
-        if (idx < 0) { showError("Please select a flight."); return; }
+        if (idx < 0) { err("Please select a flight."); return; }
 
-        Flight flight = flights.get(idx);
-        String tier   = (String) tierCombo.getSelectedItem();
-        int    bags   = (int) baggageSpinner.getValue();
+        Flight  flight = flights.get(idx);
+        String  tier   = (String) tierCombo.getSelectedItem();
+        int     bags   = (int) baggageSpinner.getValue();
         boolean lounge = loungeCheck.isSelected() && "Business".equals(tier);
 
         Passenger passenger = new Passenger(
@@ -261,41 +281,81 @@ public class BookingFormDialog extends JDialog {
             bookedTicket = service.bookFlight(passenger, flight, tier, bags, lounge);
             dispose();
         } catch (FlightOverbookedException ex) {
-            showError("Flight " + flight.getFlightNumber() + " is fully booked!\nNo available seats remaining.");
+            err("Flight " + flight.getFlightNumber() + " is fully booked! No seats available.");
         } catch (IllegalArgumentException ex) {
-            showError(ex.getMessage());
+            err(ex.getMessage());
         }
     }
 
     public Ticket getBookedTicket() { return bookedTicket; }
 
-    // ── UI Helpers ─────────────────────────────────────────────────────────────
-    private JLabel sectionLabel(String text) {
-        JLabel lbl = new JLabel(text.toUpperCase());
-        lbl.setForeground(FlightListPanel.ACCENT_BLUE);
-        lbl.setFont(new Font("Segoe UI", Font.BOLD, 10));
-        lbl.setAlignmentX(LEFT_ALIGNMENT);
-        lbl.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, FlightListPanel.BORDER_COLOR));
-        lbl.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
-        return lbl;
+    // ── GridBag helpers ────────────────────────────────────────────────────────
+    private GridBagConstraints baseGbc() {
+        GridBagConstraints g = new GridBagConstraints();
+        g.insets  = new Insets(4, 0, 4, 0);
+        g.fill    = GridBagConstraints.HORIZONTAL;
+        g.weightx = 1.0;
+        g.gridy   = 0;
+        return g;
     }
 
-    private JPanel labeledRow(String labelText, JComponent field) {
-        JPanel row = new JPanel(new BorderLayout(10, 0));
-        row.setBackground(FlightListPanel.BG_CARD);
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 46));
-        row.setAlignmentX(LEFT_ALIGNMENT);
+    private void addSectionHeader(JPanel grid, GridBagConstraints gbc, String text) {
+        JLabel lbl = new JLabel(text);
+        lbl.setForeground(FlightListPanel.ACCENT_BLUE);
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        lbl.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(0x2A3155)),
+                BorderFactory.createEmptyBorder(2, 0, 4, 0)
+        ));
+        gbc.gridy++;
+        gbc.gridx = 0; gbc.gridwidth = 2;
+        grid.add(lbl, gbc);
+    }
 
-        JLabel lbl = new JLabel(labelText);
+    private void addRow(JPanel grid, GridBagConstraints gbc, String label, JComponent field) {
+        gbc.gridy++;
+        gbc.gridx     = 0;
+        gbc.gridwidth = 1;
+        gbc.weightx   = 0.0;
+        gbc.insets    = new Insets(5, 0, 5, 16);
+
+        JLabel lbl = new JLabel(label);
         lbl.setForeground(FlightListPanel.TEXT_MUTED);
-        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        lbl.setPreferredSize(new Dimension(140, 30));
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lbl.setPreferredSize(new Dimension(130, 32));
+        grid.add(lbl, gbc);
+
+        gbc.gridx   = 1;
+        gbc.weightx = 1.0;
+        gbc.insets  = new Insets(5, 0, 5, 0);
+        field.setPreferredSize(new Dimension(380, 34));
+        grid.add(field, gbc);
+    }
+
+    private JPanel makeRowPanel(String label, JComponent field) {
+        JPanel row = new JPanel(new BorderLayout(16, 0));
+        row.setBackground(FlightListPanel.BG_CARD);
+        row.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+
+        JLabel lbl = new JLabel(label);
+        lbl.setForeground(FlightListPanel.TEXT_MUTED);
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lbl.setPreferredSize(new Dimension(130, 32));
+
+        field.setPreferredSize(new Dimension(380, 34));
         row.add(lbl,   BorderLayout.WEST);
         row.add(field, BorderLayout.CENTER);
         return row;
     }
 
-    private JTextField styledField(String placeholder) {
+    private void addGap(JPanel grid, GridBagConstraints gbc, int height) {
+        gbc.gridy++;
+        gbc.gridx = 0; gbc.gridwidth = 2;
+        grid.add(Box.createVerticalStrut(height), gbc);
+    }
+
+    // ── Widget factories ───────────────────────────────────────────────────────
+    private JTextField makeField(String placeholder) {
         JTextField f = new JTextField();
         f.setBackground(FlightListPanel.BG_DARK);
         f.setForeground(FlightListPanel.TEXT_PRIMARY);
@@ -309,60 +369,66 @@ public class BookingFormDialog extends JDialog {
         return f;
     }
 
-    private <T> JComboBox<T> styledCombo(T[] items) {
+    private <T> JComboBox<T> makeCombo(T[] items) {
         JComboBox<T> box = new JComboBox<>(items);
         box.setBackground(FlightListPanel.BG_DARK);
         box.setForeground(FlightListPanel.TEXT_PRIMARY);
         box.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         box.setBorder(BorderFactory.createLineBorder(FlightListPanel.BORDER_COLOR));
+        box.setOpaque(true);
         return box;
     }
 
     private void styleSpinner(JSpinner spinner) {
         spinner.setBackground(FlightListPanel.BG_DARK);
         spinner.setForeground(FlightListPanel.TEXT_PRIMARY);
+        spinner.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         spinner.setBorder(BorderFactory.createLineBorder(FlightListPanel.BORDER_COLOR));
-        ((JSpinner.DefaultEditor) spinner.getEditor()).getTextField().setBackground(FlightListPanel.BG_DARK);
-        ((JSpinner.DefaultEditor) spinner.getEditor()).getTextField().setForeground(FlightListPanel.TEXT_PRIMARY);
-        ((JSpinner.DefaultEditor) spinner.getEditor()).getTextField().setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        JTextField tf = ((JSpinner.DefaultEditor) spinner.getEditor()).getTextField();
+        tf.setBackground(FlightListPanel.BG_DARK);
+        tf.setForeground(FlightListPanel.TEXT_PRIMARY);
+        tf.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        tf.setCaretColor(FlightListPanel.TEXT_PRIMARY);
     }
 
-    private JButton styledButton(String text, Color bg, Color fg) {
+    private JButton makeButton(String text, Color bg, Color fg) {
         JButton btn = new JButton(text);
         btn.setBackground(bg);
         btn.setForeground(fg);
+        btn.setOpaque(true);
+        btn.setContentAreaFilled(true);
+        btn.setBorderPainted(true);
         btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(bg.darker()),
-                BorderFactory.createEmptyBorder(8, 18, 8, 18)
+                BorderFactory.createLineBorder(bg.equals(FlightListPanel.ACCENT_BLUE)
+                        ? FlightListPanel.ACCENT_BLUE.darker() : FlightListPanel.BORDER_COLOR),
+                BorderFactory.createEmptyBorder(9, 22, 9, 22)
         ));
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        Color hover = bg.equals(FlightListPanel.ACCENT_BLUE)
+                ? new Color(0x5AA0F0) : FlightListPanel.BG_HEADER;
+        btn.addMouseListener(new MouseAdapter() {
+            @Override public void mouseEntered(MouseEvent e) { btn.setBackground(hover); }
+            @Override public void mouseExited(MouseEvent e)  { btn.setBackground(bg); }
+        });
         return btn;
     }
 
-    private void showError(String msg) {
-        JOptionPane.showMessageDialog(this, msg, "Booking Error",
-                JOptionPane.ERROR_MESSAGE);
+    // ── Utilities ──────────────────────────────────────────────────────────────
+    private void err(String msg) {
+        JOptionPane.showMessageDialog(this, msg, "Booking Error", JOptionPane.ERROR_MESSAGE);
     }
 
     private void shake(JComponent comp) {
         Point origin = comp.getLocation();
-        Timer timer = new Timer(30, null);
-        final int[] step = {0};
         int[] offsets = {-8, 8, -6, 6, -4, 4, 0};
-        timer.addActionListener(e -> {
+        final int[] step = {0};
+        Timer t = new Timer(28, null);
+        t.addActionListener(e -> {
             comp.setLocation(origin.x + offsets[step[0]], origin.y);
-            step[0]++;
-            if (step[0] >= offsets.length) { timer.stop(); comp.setLocation(origin); }
+            if (++step[0] >= offsets.length) { t.stop(); comp.setLocation(origin); }
         });
-        timer.start();
-    }
-
-    private MouseAdapter hoverEffect(JButton btn, Color hover, Color normal) {
-        return new MouseAdapter() {
-            @Override public void mouseEntered(MouseEvent e) { btn.setBackground(hover); }
-            @Override public void mouseExited(MouseEvent e)  { btn.setBackground(normal); }
-        };
+        t.start();
     }
 }
