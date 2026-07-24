@@ -80,7 +80,7 @@ public class BookingFormDialog extends JDialog {
                 .map(f -> f.getFlightNumber() + "  —  " + f.getOrigin()
                         + " → " + f.getDestination()
                         + "   (" + f.getAvailableSeats() + " seats)"
-                        + "   $" + (int) f.getBasePrice())
+                        + "   ETB " + (int) f.getBasePrice())
                 .toArray(String[]::new);
 
         flightCombo = makeCombo(flightOptions);
@@ -118,13 +118,13 @@ public class BookingFormDialog extends JDialog {
         // Extra baggage row (Economy)
         baggageSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 10, 1));
         styleSpinner(baggageSpinner);
-        baggageRow = makeRowPanel("Extra Bags (+$35 each)", baggageSpinner);
+        baggageRow = makeRowPanel("Extra Bags (+ETB 35 each)", baggageSpinner);
         gbc.gridy++;
         gbc.gridx = 0; gbc.gridwidth = 2;
         grid.add(baggageRow, gbc);
 
         // Lounge access (Business)
-        loungeCheck = new JCheckBox("  Include Airport Lounge Access  (+$75)");
+        loungeCheck = new JCheckBox("  Include Airport Lounge Access  (+ETB 75)");
         loungeCheck.setBackground(FlightListPanel.BG_CARD);
         loungeCheck.setForeground(FlightListPanel.TEXT_PRIMARY);
         loungeCheck.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -173,7 +173,7 @@ public class BookingFormDialog extends JDialog {
         left.add(caption);
         left.add(note);
 
-        priceLabel = new JLabel("$0.00");
+        priceLabel = new JLabel("ETB 0.00");
         priceLabel.setForeground(FlightListPanel.ACCENT_BLUE);
         priceLabel.setFont(new Font("Segoe UI", Font.BOLD, 26));
         priceLabel.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -210,7 +210,7 @@ public class BookingFormDialog extends JDialog {
     // ── Live price ─────────────────────────────────────────────────────────────
     private void updateLivePrice() {
         int idx = flightCombo.getSelectedIndex();
-        if (idx < 0 || idx >= flights.size()) { priceLabel.setText("$0.00"); return; }
+        if (idx < 0 || idx >= flights.size()) { priceLabel.setText("ETB 0.00"); return; }
         Flight f   = flights.get(idx);
         boolean eco = "Economy".equals(tierCombo.getSelectedItem());
         double price;
@@ -219,7 +219,7 @@ public class BookingFormDialog extends JDialog {
         } else {
             price = f.getBasePrice() * 1.5 + (loungeCheck.isSelected() ? 75.0 : 0.0);
         }
-        priceLabel.setText(String.format("$%.2f", price));
+        priceLabel.setText(String.format("ETB %.2f", price));
     }
 
     // ── Booking handler ────────────────────────────────────────────────────────

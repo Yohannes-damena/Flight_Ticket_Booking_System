@@ -206,7 +206,7 @@ public class FlightListPanel extends JPanel {
                 case 5 -> f.getTotalSeats();
                 case 6 -> f.getBookedSeats();
                 case 7 -> f.getAvailableSeats();
-                case 8 -> String.format("$%.0f", f.getBasePrice());
+                case 8 -> String.format("ETB %.0f", f.getBasePrice());
                 default -> "";
             };
         }

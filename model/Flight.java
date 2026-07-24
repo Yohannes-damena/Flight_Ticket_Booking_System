@@ -167,7 +167,7 @@ public class Flight implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("%s (%s -> %s) [%d/%d seats available] - $%.2f",
+        return String.format("%s (%s -> %s) [%d/%d seats available] - ETB %.2f",
                 flightNumber, origin, destination, getAvailableSeats(), totalSeats, basePrice);
     }
 }

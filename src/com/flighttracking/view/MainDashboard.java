@@ -131,12 +131,12 @@ public class MainDashboard extends JFrame {
 
         statFlights   = new JLabel("0");
         statBookings  = new JLabel("0");
-        statRevenue   = new JLabel("$0");
+        statRevenue   = new JLabel("ETB 0");
         statAvailable = new JLabel("0");
 
         row.add(statCard("Flights",   statFlights,   "F", FlightListPanel.ACCENT_BLUE));
         row.add(statCard("Bookings",  statBookings,  "B", FlightListPanel.ACCENT_PURPLE));
-        row.add(statCard("Revenue",   statRevenue,   "$", FlightListPanel.GREEN_AVAIL));
+        row.add(statCard("Revenue",   statRevenue,   "ETB", FlightListPanel.GREEN_AVAIL));
         row.add(statCard("Available", statAvailable, "S", FlightListPanel.YELLOW_LOW));
         return row;
     }
@@ -349,7 +349,7 @@ public class MainDashboard extends JFrame {
         List<Ticket> tickets = service.getAllTickets();
         statFlights.setText(String.valueOf(service.getAllFlights().size()));
         statBookings.setText(String.valueOf(tickets.size()));
-        statRevenue.setText(String.format("$%.0f", service.getTotalRevenue()));
+        statRevenue.setText(String.format("ETB %.0f", service.getTotalRevenue()));
         statAvailable.setText(String.valueOf(service.getTotalAvailableSeats()));
 
         // Flight list panel
@@ -390,7 +390,7 @@ public class MainDashboard extends JFrame {
                 case 4 -> f.getOrigin() + " → " + f.getDestination();
                 case 5 -> t.getTierName();
                 case 6 -> t.getSeatNumber();
-                case 7 -> String.format("$%.2f", t.calculateTotalPrice());
+                case 7 -> String.format("ETB %.2f", t.calculateTotalPrice());
                 default -> "";
             };
         }

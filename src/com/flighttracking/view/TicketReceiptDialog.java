@@ -112,7 +112,7 @@ public class TicketReceiptDialog extends JDialog {
             body.add(detailRow("Priority Boarding", bt.isPriorityBoarding()     ? "✓ Included" : "—"));
         } else if (t instanceof EconomyTicket et) {
             body.add(Box.createVerticalStrut(8));
-            body.add(detailRow("Extra Bags", et.getExtraBaggageCount() + "  (×$35 each)"));
+            body.add(detailRow("Extra Bags", et.getExtraBaggageCount() + "  (×ETB 35 each)"));
         }
 
         body.add(Box.createVerticalStrut(14));
@@ -126,7 +126,7 @@ public class TicketReceiptDialog extends JDialog {
         JLabel totalLabel = new JLabel("Total Charged");
         totalLabel.setForeground(FlightListPanel.TEXT_MUTED);
         totalLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        JLabel totalValue = new JLabel(String.format("$%.2f", t.calculateTotalPrice()));
+        JLabel totalValue = new JLabel(String.format("ETB %.2f", t.calculateTotalPrice()));
         totalValue.setForeground(FlightListPanel.GREEN_AVAIL);
         totalValue.setFont(new Font("Segoe UI", Font.BOLD, 20));
         totalRow.add(totalLabel, BorderLayout.WEST);

@@ -98,7 +98,7 @@ public class BookingService {
         dataContext.addTicket(ticket);
         dataContext.saveToDisk();
 
-        System.out.printf("[BookingService] Booked: %s | Passenger: %s | Flight: %s | Seat: %s | Total: $%.2f%n",
+        System.out.printf("[BookingService] Booked: %s | Passenger: %s | Flight: %s | Seat: %s | Total: ETB %.2f%n",
                 ticketId, passenger.getFullName(), flight.getFlightNumber(), seatNumber, ticket.calculateTotalPrice());
 
         return ticket;

@@ -96,7 +96,7 @@ public abstract class Ticket implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("%s Ticket [%s] - Flight %s (%s) - Passenger: %s - Seat: %s - Total: $%.2f",
+        return String.format("%s Ticket [%s] - Flight %s (%s) - Passenger: %s - Seat: %s - Total: ETB %.2f",
                 getTierName(), ticketId, flight.getFlightNumber(), flight.getOrigin() + "->" + flight.getDestination(),
                 passenger.getFullName(), seatNumber, calculateTotalPrice());
     }
