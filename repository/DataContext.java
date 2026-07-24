@@ -271,7 +271,7 @@ public class DataContext {
         flights.add(new Flight("QR701", "Qatar Airways",      "Doha",        "Addis Ababa", "2026-08-08 07:00", 200, 60,  380.00));
         flights.add(new Flight("QR802", "Qatar Airways",      "Doha",        "London",      "2026-08-09 13:00", 180, 30,  690.00));
         flights.add(new Flight("TK901", "Turkish Airlines",   "Istanbul",    "Addis Ababa", "2026-08-10 10:30", 220, 15,  490.00));
-        flights.add(new Flight("KL001", "KLM",                "Amsterdam",   "Addis Ababa", "2026-08-11 06:00", 170,  0,  730.00));
+        flights.add(new Flight("KL001", "KLM",                "Amsterdam",   "Addis Ababa", "2026-08-11 06:00", 170, 170, 730.00)); // Fully booked — used to test overbooking guard
         System.out.println("[DataContext] Seeded " + flights.size() + " sample flights.");
     }
 
