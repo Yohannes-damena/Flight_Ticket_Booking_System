@@ -37,8 +37,17 @@ public class MainDashboard extends JFrame {
     // Stat card labels (updated on refresh)
     private JLabel statFlights, statBookings, statRevenue, statAvailable;
 
+    // Static init block — set L&F BEFORE any Swing component is created
+    static {
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
+        } catch (Exception ignored) {}
+        JFrame.setDefaultLookAndFeelDecorated(true);
+        JDialog.setDefaultLookAndFeelDecorated(true);
+    }
+
     public MainDashboard(BookingService service) {
-        super("✈  Flight Ticket Booking System");
+        super("Flight Ticket Booking System");
         this.service = service;
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -60,10 +69,7 @@ public class MainDashboard extends JFrame {
 
     // ── Global Look & Feel ─────────────────────────────────────────────────────
     private void applyGlobalTheme() {
-        // Use cross-platform Metal LAF — Windows System LAF ignores custom button colours
-        try {
-            UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
-        } catch (Exception ignored) {}
+        // Metal LAF is already set in static block — configure colours here
 
         // Override colours globally
         UIManager.put("OptionPane.background",            FlightListPanel.BG_CARD);
@@ -98,7 +104,7 @@ public class MainDashboard extends JFrame {
         titleGroup.setLayout(new BoxLayout(titleGroup, BoxLayout.Y_AXIS));
         titleGroup.setBackground(FlightListPanel.BG_DARK);
 
-        JLabel title = new JLabel("✈  Flight Ticket Booking System");
+        JLabel title = new JLabel("Flight Ticket Booking System");
         title.setForeground(FlightListPanel.TEXT_PRIMARY);
         title.setFont(new Font("Segoe UI", Font.BOLD, 22));
 
@@ -128,10 +134,10 @@ public class MainDashboard extends JFrame {
         statRevenue   = new JLabel("$0");
         statAvailable = new JLabel("0");
 
-        row.add(statCard("Flights",   statFlights,   "✈", FlightListPanel.ACCENT_BLUE));
-        row.add(statCard("Bookings",  statBookings,  "🎫", FlightListPanel.ACCENT_PURPLE));
-        row.add(statCard("Revenue",   statRevenue,   "💰", FlightListPanel.GREEN_AVAIL));
-        row.add(statCard("Available", statAvailable, "💺", FlightListPanel.YELLOW_LOW));
+        row.add(statCard("Flights",   statFlights,   "F", FlightListPanel.ACCENT_BLUE));
+        row.add(statCard("Bookings",  statBookings,  "B", FlightListPanel.ACCENT_PURPLE));
+        row.add(statCard("Revenue",   statRevenue,   "$", FlightListPanel.GREEN_AVAIL));
+        row.add(statCard("Available", statAvailable, "S", FlightListPanel.YELLOW_LOW));
         return row;
     }
 
@@ -179,10 +185,10 @@ public class MainDashboard extends JFrame {
         bar.setBackground(FlightListPanel.BG_DARK);
         bar.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, FlightListPanel.BORDER_COLOR));
 
-        JButton bookBtn   = toolbarButton("✈  Book Ticket",    FlightListPanel.ACCENT_BLUE, Color.WHITE);
-        JButton cancelBtn = toolbarButton("✕  Cancel Booking", FlightListPanel.BG_CARD, FlightListPanel.TEXT_MUTED);
-        JButton refreshBtn= toolbarButton("↻  Refresh",        FlightListPanel.BG_CARD, FlightListPanel.TEXT_MUTED);
-        JButton saveBtn   = toolbarButton("💾  Save Data",      FlightListPanel.BG_CARD, FlightListPanel.TEXT_MUTED);
+        JButton bookBtn   = toolbarButton("Book Ticket",       FlightListPanel.ACCENT_BLUE, Color.WHITE);
+        JButton cancelBtn = toolbarButton("Cancel Booking",    FlightListPanel.BG_CARD, FlightListPanel.TEXT_PRIMARY);
+        JButton refreshBtn= toolbarButton("Refresh",           FlightListPanel.BG_CARD, FlightListPanel.TEXT_PRIMARY);
+        JButton saveBtn   = toolbarButton("Save Data",         FlightListPanel.BG_CARD, FlightListPanel.TEXT_PRIMARY);
 
         bookBtn.addActionListener(e -> onBookClicked());
         cancelBtn.addActionListener(e -> onCancelClicked());
@@ -241,11 +247,11 @@ public class MainDashboard extends JFrame {
         flightTab.setBackground(FlightListPanel.BG_DARK);
         flightTab.setBorder(BorderFactory.createEmptyBorder(0, 12, 12, 12));
         flightTab.add(flightListPanel, BorderLayout.CENTER);
-        tabs.addTab("  ✈  Flights  ", flightTab);
+        tabs.addTab("  Flights  ", flightTab);
 
         // Tab 2: Bookings
         JPanel bookingsTab = buildBookingsTab();
-        tabs.addTab("  🎫  My Bookings  ", bookingsTab);
+        tabs.addTab("  My Bookings  ", bookingsTab);
 
         return tabs;
     }
