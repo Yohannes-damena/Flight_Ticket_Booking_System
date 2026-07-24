@@ -131,7 +131,7 @@ public class MainDashboard extends JFrame {
 
         statFlights   = new JLabel("0");
         statBookings  = new JLabel("0");
-        statRevenue   = new JLabel("ETB 0");
+        statRevenue   = new JLabel("0");
         statAvailable = new JLabel("0");
 
         row.add(statCard("Flights",   statFlights,   "F", FlightListPanel.ACCENT_BLUE));
@@ -148,7 +148,7 @@ public class MainDashboard extends JFrame {
                 BorderFactory.createLineBorder(FlightListPanel.BORDER_COLOR),
                 BorderFactory.createEmptyBorder(10, 14, 10, 14)
         ));
-        card.setPreferredSize(new Dimension(120, 62));
+        card.setPreferredSize(new Dimension(140, 62));
 
         JLabel iconLabel = new JLabel(icon);
         iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
@@ -349,7 +349,7 @@ public class MainDashboard extends JFrame {
         List<Ticket> tickets = service.getAllTickets();
         statFlights.setText(String.valueOf(service.getAllFlights().size()));
         statBookings.setText(String.valueOf(tickets.size()));
-        statRevenue.setText(String.format("ETB %.0f", service.getTotalRevenue()));
+        statRevenue.setText(String.format("%.0f", service.getTotalRevenue()));
         statAvailable.setText(String.valueOf(service.getTotalAvailableSeats()));
 
         // Flight list panel
